@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+option go_package="movie";
+
+package rupacinema.movie;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+
+// Movie resource represents a video content played at the cinema's
+message Movie {
+    string id = 1;
+    string title = 2;
+    string price = 3;
+    string description = 4;
+    string trailer_url = 5;
+    string release_date = 6;
+    float ratings = 7;
+    int64 movie_duration_mins = 8;
+    repeated string photos = 9;
+    repeated string category = 10;
+    Audience audience_label = 11;
+    int32 all_votes = 12;
+    int32 current_votes = 13;
+}
+
+// Appropriate audience for a movie
+enum Audience {
+    // Not rated for a kind of audience
+    // NR
+    NOT_RATED = 0;
+    // All ages admitted
+    // GE
+    GENERAL_AUDIENCE = 1;
+    // Some material may not be suitable for children
+    // PG
+    PARENTAL_GUIDANCE = 2;
+    // Some material may be unappropriate for children under 13
+    // PG-13
+    PARENTAL_GUIDANCE_13 = 3;
+    // No one 17 and uUnder Admitted
+    // NC-17
+    NO_ONE_17 = 4;
+}
+
+// Request to create a movie resource
+message CreateMovieRequest {
+    string request_id = 1;
+    Movie movie = 2;
+}
+
+// Request to update a movie resource. Performs a full update
+message UpdateMovieRequest {
+    string request_id = 1;
+    Movie movie = 3;
+}
+
+// Request to remove a movie resource
+message DeleteMovieRequest {
+    string movie_id = 1;
+    string admin_id = 2;
+}
+
+// Request to retrieve a collection of movies
+message ListMoviesRequest {
+    // Page token
+    int32 page_token = 1;
+}
+
+// Response from ListMoviesRequest
+message ListMoviesResponse {
+    // To be used as page_token in the next call
+    int32 next_page_token = 1;
+    // Collection of movie resource
+    repeated Movie movies = 2;
+}
+
+// Request to retrieve a single movie resource
+message GetMovieRequest {
+    string movie_id = 1;
+}
+
+// Request to request for playback for a particular movie
+message RequestMovieReplayRequest {
+    string movie_id = 1;
+    string user_id = 2;
+}
+
+// Manages movies resource in the database
+service MovieAPI {
+
+    // Creates a new movie resource. Admins only. Requires authentication
+    rpc CreateMovie (CreateMovieRequest) returns (google.protobuf.Empty) {
+        // CreateMovie maps to HTTP POST method
+        // request_id and movie resource are contained in the request body
+        option (google.api.http) = {
+            post: "/api/movies"
+            body: "*"
+        };
+    }
+
+    // Updates information for a given movie resource. Admins only. Requires authentication.
+    rpc UpdateMovie (UpdateMovieRequest) returns (google.protobuf.Empty) {
+        // UpdateMovie maps to HTTP PUT method
+        // Performs a full update of the movie resource
+        // request_id and movie resource are contained in the request body
+        option (google.api.http) = {
+            put: "/api/movies"
+            body: "*"
+        };
+    }
+
+    // Removes permanently a movie resource. Admins only. Requires authentication.
+    rpc DeleteMovie (DeleteMovieRequest) returns (google.protobuf.Empty) {
+        // DeleteMovie maps to HTTP DELETE method
+        // movie_id and admin_id are contained in the request URL query parameters
+        option (google.api.http) = {
+            delete: "/api/movies"
+        };
+    }
+
+    // ListMovies retrieves a collection of movie resource
+    rpc ListMovies (ListMoviesRequest) returns (ListMoviesResponse) {
+        // ListMovies maps to HTTP GET method
+        // page_token maps to URL query parameters
+        option (google.api.http) = {
+            get: "/api/movies"
+        };
+    }
+
+    // Retrieves a movie resource. Any User.
+    rpc GetMovie (GetMovieRequest) returns (Movie) {
+        // GetMovie maps to HTTP GET method
+        // movie_id maps to request URL path parameter
+        option (google.api.http) = {
+            get: "/api/movies/{movie_id}"
+        };
+    }
+    
+    // Requests a movie to be replayed again. By Users. Requires authentication
+    rpc RequestMovieReplay (RequestMovieReplayRequest) returns (google.protobuf.Empty) {
+        // RequestMovieReplay method maps to HTTP GET method
+        // movie_id and user_id are contained in the URL query parameters
+        option (google.api.http) = {
+            get: "/api/movies/playback"
+        };
+    }
+}
