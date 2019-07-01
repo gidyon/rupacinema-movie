@@ -25,6 +25,10 @@ func (listMovies *listMoviesDS) List(
 	}
 
 	pageToken := listReq.GetPageToken()
+	if pageToken < 0 {
+		listMovies.err = errIncorrectVal("Page token")
+		return
+	}
 
 	// Movie ids stored in redis list
 	movieIDs, err := getListIDs(
@@ -68,10 +72,7 @@ func (listMovies *listMoviesDS) List(
 		}
 		movieItem, err := getMovieFromHGETALL(strMapMapCmd)
 		if err != nil {
-			go sendFailedRedisCMDToWorker(redisWorkerChan, &redisWorker{
-				statusCMD: strMapMapCmd,
-				action:    "list movies",
-			})
+			go sendRedisErrToChan(redisWorkerChan, strMapMapCmd, actionList)
 			continue
 		}
 

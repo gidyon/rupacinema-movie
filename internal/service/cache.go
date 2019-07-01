@@ -17,6 +17,7 @@ const (
 	actionSet    = "set"
 	actionVote   = "vote"
 	actionDelete = "delete"
+	actionList   = "list"
 	moviesList   = "movies:list"
 )
 
@@ -217,7 +218,7 @@ func getListIDs(
 	redisWorkerChan chan<- redisWorker, redisClient *redis.Client, start, stop int64,
 ) ([]string, error) {
 
-	strSliceCMD := redisClient.SMembers(moviesList)
+	strSliceCMD := redisClient.LRange(moviesList, start, stop)
 
 	// strSliceLen := len(strSliceCMD.Val())
 
@@ -269,7 +270,7 @@ func loadMoviesIDToCache(
 		}
 
 		// Load the movie ids in redis set cache
-		intCMD := redisClient.SAdd(moviesList, movieID)
+		intCMD := redisClient.LPush(moviesList, movieID)
 		if err := intCMD.Err(); err != nil {
 			logger.Log.Warn("error adding movie id to set", zap.Error(err))
 			continue

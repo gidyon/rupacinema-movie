@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"github.com/gidyon/rupacinema/account/pkg/api"
 	"github.com/gidyon/rupacinema/movie/pkg/api"
 	"github.com/gidyon/rupacinema/notification/pkg/api"
 	"github.com/go-redis/redis"
@@ -16,6 +17,7 @@ type movieAPIServer struct {
 	sqlWorkerChan             chan sqlWorker
 	redisWorkerChan           chan redisWorker
 	notificationServiceClient notification.NotificationServiceClient
+	accountServiceClient      account.AccountAPIClient
 }
 
 type sqlWorker struct {
@@ -37,6 +39,7 @@ func NewMovieAPI(
 	redisClient *redis.Client,
 	db *sql.DB,
 	notificationServiceClient notification.NotificationServiceClient,
+	accountServiceClient account.AccountAPIClient,
 ) (movie.MovieAPIServer, error) {
 	movieSrv := &movieAPIServer{
 		ctx:             ctx,
@@ -46,6 +49,7 @@ func NewMovieAPI(
 		redisWorkerChan: make(chan redisWorker, 0),
 		// Connection to remote services
 		notificationServiceClient: notificationServiceClient,
+		accountServiceClient:      accountServiceClient,
 	}
 
 	// Load the IDs of movies to cache
@@ -66,6 +70,14 @@ func NewMovieAPI(
 func (movieAPI *movieAPIServer) CreateMovie(
 	ctx context.Context, createReq *movie.CreateMovieRequest,
 ) (*empty.Empty, error) {
+	// Authenticate the request
+	_, err := movieAPI.accountServiceClient.AuthenticateRequest(
+		ctx, &empty.Empty{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	ctxCreate, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -91,6 +103,14 @@ func (movieAPI *movieAPIServer) CreateMovie(
 func (movieAPI *movieAPIServer) UpdateMovie(
 	ctx context.Context, updateReq *movie.UpdateMovieRequest,
 ) (*empty.Empty, error) {
+	// Authenticate the request
+	_, err := movieAPI.accountServiceClient.AuthenticateRequest(
+		ctx, &empty.Empty{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	ctxUpdate, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -115,6 +135,14 @@ func (movieAPI *movieAPIServer) UpdateMovie(
 func (movieAPI *movieAPIServer) DeleteMovie(
 	ctx context.Context, delReq *movie.DeleteMovieRequest,
 ) (*empty.Empty, error) {
+	// Authenticate the request
+	_, err := movieAPI.accountServiceClient.AuthenticateRequest(
+		ctx, &empty.Empty{},
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	ctxDel, cancel := context.WithCancel(ctx)
 	defer cancel()
 
