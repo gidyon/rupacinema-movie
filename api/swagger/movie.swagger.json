@@ -1,0 +1,293 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "movie.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/movies": {
+      "get": {
+        "summary": "ListMovies retrieves a collection of movie resource",
+        "operationId": "ListMovies",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/movieListMoviesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_token",
+            "description": "Page token.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "MovieAPI"
+        ]
+      },
+      "delete": {
+        "summary": "Removes permanently a movie resource. Admins only. Requires authentication.",
+        "operationId": "DeleteMovie",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "admin_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MovieAPI"
+        ]
+      },
+      "post": {
+        "summary": "Creates a new movie resource. Admins only. Requires authentication",
+        "operationId": "CreateMovie",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/movieCreateMovieRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MovieAPI"
+        ]
+      },
+      "put": {
+        "summary": "Updates information for a given movie resource. Admins only. Requires authentication.",
+        "operationId": "UpdateMovie",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/movieUpdateMovieRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MovieAPI"
+        ]
+      }
+    },
+    "/api/movies/playback": {
+      "get": {
+        "summary": "Requests a movie to be replayed again. By Users. Requires authentication",
+        "operationId": "RequestMovieReplay",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MovieAPI"
+        ]
+      }
+    },
+    "/api/movies/{movie_id}": {
+      "get": {
+        "summary": "Retrieves a movie resource. Any User.",
+        "operationId": "GetMovie",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/movieMovie"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MovieAPI"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "movieAudience": {
+      "type": "string",
+      "enum": [
+        "NOT_RATED",
+        "GENERAL_AUDIENCE",
+        "PARENTAL_GUIDANCE",
+        "PARENTAL_GUIDANCE_13",
+        "NO_ONE_17"
+      ],
+      "default": "NOT_RATED",
+      "description": "- NOT_RATED: Not rated for a kind of audience\nNR\n - GENERAL_AUDIENCE: All ages admitted\nGE\n - PARENTAL_GUIDANCE: Some material may not be suitable for children\nPG\n - PARENTAL_GUIDANCE_13: Some material may be unappropriate for children under 13\nPG-13\n - NO_ONE_17: No one 17 and uUnder Admitted\nNC-17",
+      "title": "Appropriate audience for a movie"
+    },
+    "movieCreateMovieRequest": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "movie": {
+          "$ref": "#/definitions/movieMovie"
+        }
+      },
+      "title": "Request to create a movie resource"
+    },
+    "movieListMoviesResponse": {
+      "type": "object",
+      "properties": {
+        "next_page_token": {
+          "type": "integer",
+          "format": "int32",
+          "title": "To be used as page_token in the next call"
+        },
+        "movies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/movieMovie"
+          },
+          "title": "Collection of movie resource"
+        }
+      },
+      "title": "Response from ListMoviesRequest"
+    },
+    "movieMovie": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "trailer_url": {
+          "type": "string"
+        },
+        "release_date": {
+          "type": "string"
+        },
+        "ratings": {
+          "type": "number",
+          "format": "float"
+        },
+        "movie_duration_mins": {
+          "type": "string",
+          "format": "int64"
+        },
+        "photos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "category": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "audience_label": {
+          "$ref": "#/definitions/movieAudience"
+        },
+        "all_votes": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "current_votes": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Movie resource represents a video content played at the cinema's"
+    },
+    "movieUpdateMovieRequest": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "movie": {
+          "$ref": "#/definitions/movieMovie"
+        }
+      },
+      "title": "Request to update a movie resource. Performs a full update"
+    }
+  }
+}
