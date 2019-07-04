@@ -32,14 +32,14 @@ func main() {
 	// gRPC section
 	flag.StringVar(
 		&cfg.GRPCPort,
-		"grpc-port", ":5500",
+		"grpc-port", ":5560",
 		"gRPC port to bind",
 	)
 
 	// DB section
 	flag.StringVar(
 		&cfg.DBHost,
-		"db-host", "mysqldb",
+		"db-host", "localhost",
 		"Database host",
 	)
 	flag.StringVar(
@@ -61,7 +61,7 @@ func main() {
 	// Redis section
 	flag.StringVar(
 		&cfg.RedisHost,
-		"redis-host", "redisdb",
+		"redis-host", "localhost",
 		"Redis host",
 	)
 	flag.StringVar(
