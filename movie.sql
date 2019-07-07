@@ -34,7 +34,7 @@ CREATE TABLE `movies` (
   `price` varchar(15) NOT NULL DEFAULT 'NA',
   `description` text NOT NULL,
   `trailer_url` text,
-  `audience_label` enum('NR','GE','PG','PG-13','NC-17') NOT NULL DEFAULT 'NR',
+  `audience_label` enum('NOT_RATED','GENERAL_AUDIENCE','PARENTAL_GUIDANCE','PARENTAL_GUIDANCE_13','NO_ONE_17') NOT NULL DEFAULT 'NOT_RATED',
   `ratings` float NOT NULL DEFAULT '0',
   `duration` int(11) DEFAULT 0,
   `all_votes` int(11) DEFAULT 0,
