@@ -46,7 +46,7 @@ func (getMovie *getMovieDS) Get(
 
 		getMovie.res = movieItem
 
-		setMovieInCacheOneErr(redisWorkerChan, redisClient, movieItem, err, "GetMovie")
+		setMovieInCacheAndHandleErr(redisWorkerChan, redisClient, movieItem)
 
 		return
 	}
@@ -104,7 +104,11 @@ func getMovieFromDB(
 		&photos,
 	)
 
-	if err != nil {
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
+		return nil, errMovieNoExists(movieID)
+	default:
 		go sendSQLErrToChan(sqlWorkerChan, &sqlWorker{
 			query: query,
 			args:  []interface{}{movieID},
@@ -113,12 +117,12 @@ func getMovieFromDB(
 		return nil, errQueryFailed(err, "GetMovie (SELECT)")
 	}
 
-	err = json.Unmarshal(category, movieItem.Category)
+	err = json.Unmarshal(category, &movieItem.Category)
 	if err != nil {
 		return nil, errFromJSONUnMarshal(err, "Movie.Category")
 	}
 
-	err = json.Unmarshal(photos, movieItem.Photos)
+	err = json.Unmarshal(photos, &movieItem.Photos)
 	if err != nil {
 		return nil, errFromJSONUnMarshal(err, "Movie.Photos")
 	}

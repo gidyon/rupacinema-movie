@@ -34,7 +34,7 @@ func (deleteMovie *deleteMovieDS) Delete(
 	}
 
 	// Prepare query
-	query := "DELETE * FROM movies WHERE id=?"
+	query := "DELETE FROM movies WHERE id=?"
 
 	// Execute query
 	_, err := db.ExecContext(ctx, query, movieID)

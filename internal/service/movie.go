@@ -8,6 +8,7 @@ import (
 	"github.com/gidyon/rupacinema/notification/pkg/api"
 	"github.com/go-redis/redis"
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/metadata"
 )
 
 type movieAPIServer struct {
@@ -53,12 +54,16 @@ func NewMovieAPI(
 	}
 
 	// Load the IDs of movies to cache
-	err := loadMoviesIDToCache(
+	err := loadMoviesToCache(
 		ctx,
 		movieSrv.redisWorkerChan,
 		movieSrv.redisClient,
 		movieSrv.db,
 	)
+
+	// Start worker
+	go movieSrv.handleRedisErr()
+	go movieSrv.handleSQLErr()
 
 	if err != nil {
 		return nil, err
@@ -70,12 +75,24 @@ func NewMovieAPI(
 func (movieAPI *movieAPIServer) CreateMovie(
 	ctx context.Context, createReq *movie.CreateMovieRequest,
 ) (*empty.Empty, error) {
-	// Authenticate the request
-	_, err := movieAPI.accountServiceClient.AuthenticateRequest(
-		ctx, &empty.Empty{},
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errMissingMetadata()
+	}
+
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	// Authenticate the admin and request
+	authRes, err := movieAPI.accountServiceClient.AuthenticateAdmin(
+		ctx, createReq.GetAdminCreds(),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check that the admin has credentials
+	if !authRes.Valid {
+		return nil, errPermissionDenied("CreateMovie")
 	}
 
 	ctxCreate, cancel := context.WithCancel(ctx)
@@ -103,12 +120,24 @@ func (movieAPI *movieAPIServer) CreateMovie(
 func (movieAPI *movieAPIServer) UpdateMovie(
 	ctx context.Context, updateReq *movie.UpdateMovieRequest,
 ) (*empty.Empty, error) {
-	// Authenticate the request
-	_, err := movieAPI.accountServiceClient.AuthenticateRequest(
-		ctx, &empty.Empty{},
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errMissingMetadata()
+	}
+
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	// Authenticate the admin and request
+	authRes, err := movieAPI.accountServiceClient.AuthenticateAdmin(
+		ctx, updateReq.GetAdminCreds(),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check that the admin has credentials
+	if !authRes.Valid {
+		return nil, errPermissionDenied("UpdateMovie")
 	}
 
 	ctxUpdate, cancel := context.WithCancel(ctx)
@@ -135,12 +164,24 @@ func (movieAPI *movieAPIServer) UpdateMovie(
 func (movieAPI *movieAPIServer) DeleteMovie(
 	ctx context.Context, delReq *movie.DeleteMovieRequest,
 ) (*empty.Empty, error) {
-	// Authenticate the request
-	_, err := movieAPI.accountServiceClient.AuthenticateRequest(
-		ctx, &empty.Empty{},
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errMissingMetadata()
+	}
+
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	// Authenticate the admin and request
+	authRes, err := movieAPI.accountServiceClient.AuthenticateAdmin(
+		ctx, delReq.GetAdminCreds(),
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check that the admin has credentials
+	if !authRes.Valid {
+		return nil, errPermissionDenied("DeleteMovie")
 	}
 
 	ctxDel, cancel := context.WithCancel(ctx)
@@ -167,7 +208,23 @@ func (movieAPI *movieAPIServer) DeleteMovie(
 func (movieAPI *movieAPIServer) ListMovies(
 	ctx context.Context, listReq *movie.ListMoviesRequest,
 ) (*movie.ListMoviesResponse, error) {
-	return nil, nil
+	ctxList, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	listMovies := &listMoviesDS{}
+
+	listMovies.List(
+		ctx,
+		movieAPI.redisWorkerChan,
+		listReq,
+		movieAPI.redisClient,
+	)
+
+	if cancelled(ctx) {
+		listMovies.err = contextError(ctxList, "ListMovies")
+	}
+
+	return listMovies.res, listMovies.err
 }
 
 func (movieAPI *movieAPIServer) GetMovie(

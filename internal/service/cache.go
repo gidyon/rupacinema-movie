@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 	// "encoding/json"
 	"github.com/gidyon/rupacinema/movie/pkg/api"
@@ -21,80 +22,36 @@ const (
 	moviesList   = "movies:list"
 )
 
+var (
+	moviesFields = []string{
+		"id",
+		"title",
+		"price",
+		"description",
+		"trailer_url",
+		"release_date",
+		"ratings",
+		"duration",
+		"photos",
+		"category",
+		"audience_label",
+		"all_votes",
+	}
+)
+
 func getKey(movieID string) string {
 	return "movies:" + movieID
 }
 
-func setMovieInCacheAndHandleErr(
-	redisWorkerChan chan<- redisWorker,
-	redisClient *redis.Client,
-	movieItem *movie.Movie,
-) {
-	statusCMD := setMovieInCache(redisClient, movieItem)
-	if statusCMD.Err() != nil {
-		// Send the command that failed to redisWorker worker
-		go sendRedisErrToChan(redisWorkerChan, statusCMD, actionSet)
-	}
-}
-
-func setMovieInCache(
-	redisClient *redis.Client,
-	movieItem *movie.Movie,
-) *redis.StatusCmd {
-
-	// string id = 1;
-	// string title = 2;
-	// string price = 3;
-	// string description = 4;
-	// string trailer_url = 5;
-	// string release_date = 6;
-	// float ratings = 7;
-	// int64 movie_duration_mins = 8;
-	// repeated string photos = 9;
-	// repeated string category = 10;
-	// Audience audience_label = 11;
-	// int32 all_votes = 12;
-	// int32 current_votes = 13;
-
-	movieMap := map[string]interface{}{
-		"id":             movieItem.Id,
-		"title":          movieItem.Title,
-		"price":          movieItem.Price,
-		"description":    movieItem.Description,
-		"trailer_url":    movieItem.TrailerUrl,
-		"release_date":   movieItem.ReleaseDate,
-		"ratings":        movieItem.Ratings,
-		"duration":       movieItem.MovieDurationMins,
-		"photos":         strings.Join(movieItem.Photos, ";"),
-		"category":       strings.Join(movieItem.Category, ";"),
-		"audience_label": movieItem.AudienceLabel,
-		"all_votes":      movieItem.AllVotes,
-	}
-
-	return redisClient.HMSet(getKey(movieItem.Id), movieMap)
-}
-
-func getMovieFromCache(
-	redisClient *redis.Client,
-	movieID string,
-) (*movie.Movie, error) {
-
-	strMapMapCmd := redisClient.HGetAll(getKey(movieID))
-
-	movieItem, err := getMovieFromHGETALL(strMapMapCmd)
-	if err != nil {
+func getMovieFromHGETALL(strMapMapCmd *redis.StringStringMapCmd) (*movie.Movie, error) {
+	movieMap, err := strMapMapCmd.Result()
+	if err != nil || err == redis.Nil {
 		return nil, err
 	}
-
-	return movieItem, nil
-}
-
-func getMovieFromHGETALL(strMapMapCmd *redis.StringStringMapCmd) (*movie.Movie, error) {
-	if strMapMapCmd.Err() != nil {
-		return nil, strMapMapCmd.Err()
+	// The driver cannot distinguish whether the err is from an non-existent hash key
+	if len(movieMap) == 0 {
+		return nil, errMovieNotSet()
 	}
-
-	movieMap := strMapMapCmd.Val()
 	// movieMap := map[string]interface{}{
 	// 	"id":             movieItem.Id,
 	// 	"title":          movieItem.Title,
@@ -110,7 +67,7 @@ func getMovieFromHGETALL(strMapMapCmd *redis.StringStringMapCmd) (*movie.Movie, 
 	// 	"all_votes":      movieItem.AllVotes,
 	// }
 
-	ratings, err := strconv.ParseFloat(movieMap["ratings"], 32)
+	ratings, err := strconv.ParseFloat(strings.Trim(movieMap["ratings"], "\""), 32)
 	if err != nil {
 		return nil, errConvertingType(err, "String", "Float64")
 	}
@@ -148,23 +105,90 @@ func getMovieFromHGETALL(strMapMapCmd *redis.StringStringMapCmd) (*movie.Movie, 
 	return movieItem, nil
 }
 
+func setMovieInCache(
+	redisClient *redis.Client,
+	movieItem *movie.Movie,
+) *redis.StatusCmd {
+
+	// string id = 1;
+	// string title = 2;
+	// string price = 3;
+	// string description = 4;
+	// string trailer_url = 5;
+	// string release_date = 6;
+	// float ratings = 7;
+	// int64 movie_duration_mins = 8;
+	// repeated string photos = 9;
+	// repeated string category = 10;
+	// Audience audience_label = 11;
+	// int32 all_votes = 12;
+	// int32 current_votes = 13;
+
+	movieMap := map[string]interface{}{
+		"id":             movieItem.Id,
+		"title":          movieItem.Title,
+		"price":          movieItem.Price,
+		"description":    movieItem.Description,
+		"trailer_url":    movieItem.TrailerUrl,
+		"release_date":   movieItem.ReleaseDate,
+		"ratings":        movieItem.Ratings,
+		"duration":       movieItem.MovieDurationMins,
+		"photos":         strings.Join(movieItem.Photos, ";"),
+		"category":       strings.Join(movieItem.Category, ";"),
+		"audience_label": int32(movieItem.AudienceLabel),
+		"all_votes":      movieItem.AllVotes,
+	}
+
+	return redisClient.HMSet(
+		getKey(movieItem.Id),
+		movieMap,
+	)
+}
+
+func setMovieInCacheAndHandleErr(
+	redisWorkerChan chan<- redisWorker,
+	redisClient *redis.Client,
+	movieItem *movie.Movie,
+) {
+	statusCMD := setMovieInCache(redisClient, movieItem)
+	if statusCMD.Err() != nil {
+		// Send the command that failed to redisWorker worker
+		go sendRedisErrToChan(redisWorkerChan, statusCMD, actionSet)
+	}
+}
+
+func getMovieFromCache(
+	redisClient *redis.Client,
+	movieID string,
+) (*movie.Movie, error) {
+
+	strMapMapCmd := redisClient.HGetAll(getKey(movieID))
+
+	movieItem, err := getMovieFromHGETALL(strMapMapCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return movieItem, nil
+}
+
 func rmMovieFromCacheAndHandleErr(
 	redisWorkerChan chan<- redisWorker,
 	redisClient *redis.Client,
 	movieID string,
 ) {
-	intCMD := rmMovieFromCache(redisClient, movieID)
-	if err := intCMD.Err(); err != nil {
+	boolCMD := rmMovieFromCache(redisClient, movieID)
+	if err := boolCMD.Err(); err != nil {
 		// Send the command that failed to redisWorker worker
-		go sendRedisErrToChan(redisWorkerChan, intCMD, actionDelete)
+		go sendRedisErrToChan(redisWorkerChan, boolCMD, actionDelete)
 	}
 }
 
 func rmMovieFromCache(
 	redisClient *redis.Client,
 	movieID string,
-) *redis.IntCmd {
-	return redisClient.HDel(getKey(movieID))
+) *redis.BoolCmd {
+	return redisClient.Expire(getKey(movieID), time.Second*2)
 }
 
 func incrementVoteInCache(client *redis.Client, movieID string) *redis.IntCmd {
@@ -176,26 +200,6 @@ func incrementVoteInCache(client *redis.Client, movieID string) *redis.IntCmd {
 	}
 
 	return pipeliner.HIncrBy(getKey(movieID), "current_votes", 1)
-}
-
-func setMovieInCacheOneErr(
-	redisWorkerChan chan<- redisWorker,
-	redisClient *redis.Client,
-	movieItem *movie.Movie,
-	err error,
-	op string,
-) {
-	switch {
-	case err == redis.Nil:
-		// Sets this movie in redis cache and handle error
-		setMovieInCacheAndHandleErr(redisWorkerChan, redisClient, movieItem)
-	default:
-		logger.Log.Warn(
-			"error occurred working with cache",
-			zap.String("Operation", op),
-			zap.Error(err),
-		)
-	}
 }
 
 func sendRedisErrToChan(redisWorkerChan chan<- redisWorker, cmd redis.Cmder, action string) {
@@ -280,83 +284,85 @@ func loadMoviesIDToCache(
 	return nil
 }
 
-// func loadMoviesToCache(
-// 	ctx context.Context,
-// 	redisWorkerChan chan<- redisWorker,
-// 	redisClient *redis.Client,
-// 	db *sql.DB,
-// ) error {
-// 	// Get all movies
-// 	// Load them in cache
-// 	// Load their id in movies list
+func loadMoviesToCache(
+	ctx context.Context,
+	redisWorkerChan chan<- redisWorker,
+	redisClient *redis.Client,
+	db *sql.DB,
+) error {
+	// Get all movies
+	// Load them in cache
+	// Load their id in movies list
 
-// 	// Prepare query
-// 	query := `SELECT * FROM movies`
-// 	// Execute query
-// 	rows, err := db.QueryContext(ctx, query)
-// 	if err != nil {
-// 		return errQueryFailed(err, "GeTMovies (SELECT)")
-// 	}
+	// Prepare query
+	query := `SELECT * FROM movies`
+	// Execute query
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return errQueryFailed(err, "GeTMovies (SELECT)")
+	}
 
-// 	for rows.Next() {
-// 		movieItem := &movie.Movie{}
-// 		audienceLabel := ""
-// 		createTime := ""
-// 		category := make([]byte, 0)
-// 		photos := make([]byte, 0)
+	for rows.Next() {
+		movieItem := &movie.Movie{}
+		audienceLabel := ""
+		createTime := ""
+		category := make([]byte, 0)
+		photos := make([]byte, 0)
 
-// 		// `id` varchar(50) NOT NULL,
-// 		// `title` varchar(50) NOT NULL,
-// 		// `price` varchar(15) NOT NULL DEFAULT 'NA',
-// 		// `description` text NOT NULL,
-// 		// `trailer_url` text,
-// 		// `audience_label` enum('NR','GE','PG','PG-13','NC-17') NOT NULL DEFAULT 'NR',
-// 		// `ratings` float NOT NULL DEFAULT '0',
-// 		// `duration` int(11) DEFAULT 0,
-// 		// `all_votes` int(11) DEFAULT 0,
-// 		// `release_date` date DEFAULT NULL,
-// 		// `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-// 		// `category` json DEFAULT NULL,
-// 		// `photos` json DEFAULT NULL,
+		// `id` varchar(50) NOT NULL,
+		// `title` varchar(50) NOT NULL,
+		// `price` varchar(15) NOT NULL DEFAULT 'NA',
+		// `description` text NOT NULL,
+		// `trailer_url` text,
+		// `audience_label` enum('NR','GE','PG','PG-13','NC-17') NOT NULL DEFAULT 'NR',
+		// `ratings` float NOT NULL DEFAULT '0',
+		// `duration` int(11) DEFAULT 0,
+		// `all_votes` int(11) DEFAULT 0,
+		// `release_date` date DEFAULT NULL,
+		// `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		// `category` json DEFAULT NULL,
+		// `photos` json DEFAULT NULL,
 
-// 		err = rows.Scan(
-// 			&movieItem.Id,
-// 			&movieItem.Title,
-// 			&movieItem.Price,
-// 			&movieItem.Description,
-// 			&movieItem.TrailerUrl,
-// 			&audienceLabel,
-// 			&movieItem.Ratings,
-// 			&movieItem.MovieDurationMins,
-// 			&movieItem.AllVotes,
-// 			&movieItem.ReleaseDate,
-// 			&createTime,
-// 			&category,
-// 			&photos,
-// 		)
+		err = rows.Scan(
+			&movieItem.Id,
+			&movieItem.Title,
+			&movieItem.Price,
+			&movieItem.Description,
+			&movieItem.TrailerUrl,
+			&audienceLabel,
+			&movieItem.Ratings,
+			&movieItem.MovieDurationMins,
+			&movieItem.AllVotes,
+			&movieItem.ReleaseDate,
+			&createTime,
+			&category,
+			&photos,
+		)
 
-// 		if err != nil {
-// 			return rows.Err()
-// 		}
+		if err != nil {
+			return rows.Err()
+		}
 
-// 		err = json.Unmarshal(category, movieItem.Category)
-// 		if err != nil {
-// 			logger.Log.Warn("json unmarshal failed on Movie.Category", zap.Error(err))
-// 			continue
-// 		}
+		err = json.Unmarshal(category, movieItem.Category)
+		if err != nil {
+			logger.Log.Warn("json unmarshal failed on Movie.Category", zap.Error(err))
+			continue
+		}
 
-// 		err = json.Unmarshal(photos, movieItem.Photos)
-// 		if err != nil {
-// 			logger.Log.Warn("json unmarshal failed on Movie.Photos", zap.Error(err))
-// 			continue
-// 		}
+		err = json.Unmarshal(photos, movieItem.Photos)
+		if err != nil {
+			logger.Log.Warn("json unmarshal failed on Movie.Photos", zap.Error(err))
+			continue
+		}
 
-// 		movieItem.AudienceLabel = movie.Audience(movie.Audience_value[audienceLabel])
+		movieItem.AudienceLabel = movie.Audience(movie.Audience_value[audienceLabel])
 
-// 		// Load the movie ids in cache
-// 		redisClient.LPush(moviesList, movieItem.Id)
+		// Load the movie ids in cache
+		redisClient.LPush(moviesList, movieItem.Id)
 
-// 	}
+		// Set the movie in cache
+		setMovieInCacheAndHandleErr(redisWorkerChan, redisClient, movieItem)
+	}
 
-// 	return nil
-// }
+	return nil
+}

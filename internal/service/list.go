@@ -42,18 +42,20 @@ func (listMovies *listMoviesDS) List(
 		return
 	}
 
-	// Get the movie obj
+	// Prepare a pipeline
 	pipeline := redisClient.Pipeline()
 
+	// Channel to receive results
+	strMapMapCmdChan := make(chan *redis.StringStringMapCmd, pageSize)
+
 	for _, movieID := range movieIDs {
-		pipeline.HGetAll(getKey(movieID))
+		strMapMapCmdChan <- pipeline.HGetAll(getKey(movieID))
 	}
 
-	fn := func(pipeline redis.Pipeliner) error {
-		return nil
-	}
+	close(strMapMapCmdChan)
 
-	sliceCMD, err := redisClient.Pipelined(fn)
+	// Execeute the pipeline
+	sliceCMD, err := pipeline.Exec()
 	if err != nil {
 		listMovies.err = errRedisCmdFailed(err, "List Movies")
 		return
@@ -64,12 +66,7 @@ func (listMovies *listMoviesDS) List(
 		Movies:        make([]*movie.Movie, 0, len(sliceCMD)),
 	}
 
-	for _, cmd := range sliceCMD {
-		strMapMapCmd, ok := cmd.(*redis.StringStringMapCmd)
-		if !ok {
-			listMovies.err = errFailedTypeConversion("redis.Cmder", "redis.StringStringMapCmd")
-			return
-		}
+	for strMapMapCmd := range strMapMapCmdChan {
 		movieItem, err := getMovieFromHGETALL(strMapMapCmd)
 		if err != nil {
 			go sendRedisErrToChan(redisWorkerChan, strMapMapCmd, actionList)

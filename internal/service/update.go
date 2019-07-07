@@ -106,7 +106,7 @@ func updateMovieToDB(
 	// `photos` json DEFAULT NULL,
 
 	// Prepare query
-	query := `UPDATE movies SET title=?, price=?, description=?, trailer_url=?, audience_label=?, ratings=?, duration=?, release_date=?, category=?, photos=?) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) WHERE id=?`
+	query := `UPDATE movies SET title=?, price=?, description=?, trailer_url=?, audience_label=?, ratings=?, duration=?, release_date=?, category=?, photos=? WHERE id=?`
 
 	// Execute query
 	_, err = db.ExecContext(ctx, query,

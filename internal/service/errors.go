@@ -87,13 +87,25 @@ func errNonExistentKey(key string) error {
 }
 
 func errFailedTypeConversion(from, to string) error {
-	return status.Errorf(codes.Internal, "type conversion from: %q to %q failed", from, to)
+	return status.Errorf(codes.Internal, "type conversion from: %s to %s failed", from, to)
 }
 
 func errIncorrectVal(val string) error {
-	return status.Errorf(codes.InvalidArgument, "incorrect value for %q", val)
+	return status.Errorf(codes.InvalidArgument, "incorrect value for %s", val)
 }
 
 func errMovieExists(title string) error {
-	return status.Errorf(codes.AlreadyExists, "movie with title: %q already exists", title)
+	return status.Errorf(codes.AlreadyExists, "movie with title: %s already exists", title)
+}
+
+func errMovieNoExists(id string) error {
+	return status.Errorf(codes.AlreadyExists, "movie with id %s does not exist", id)
+}
+
+func errMissingMetadata() error {
+	return status.Error(codes.FailedPrecondition, "missing metadata for the authorization")
+}
+
+func errMovieNotSet() error {
+	return status.Error(codes.Unavailable, "movie not set in cache")
 }

@@ -113,6 +113,10 @@ func (createMovie *createMovieDS) Create(
 		},
 	)
 
+	// Push the Id of the movie in movies:list
+	redisClient.LPush(moviesList, movieItem.Id)
+
+	// Set the movie in cache
 	setMovieInCacheAndHandleErr(
 		redisWorkerChan,
 		redisClient,
@@ -153,7 +157,7 @@ func insertMovieToDB(
 	// `photos` json DEFAULT NULL,
 
 	// Prepare query
-	query := `INSERT INTO movies (id, title, price, description, trailer_url, audience_label, ratings, duration, all_votes, release_date, create_time, category, photos) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, DATE(?), ?, ?, ?)`
+	query := `INSERT INTO movies (id, title, price, description, trailer_url, audience_label, ratings, duration, all_votes, release_date, create_time, category, photos) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, DATE(?), NOW(), ?, ?)`
 
 	// Execute query
 	_, err = db.ExecContext(ctx, query,
@@ -167,7 +171,6 @@ func insertMovieToDB(
 		movieItem.MovieDurationMins,
 		movieItem.AllVotes,
 		movieItem.ReleaseDate,
-		`NOW()`,
 		category,
 		photos,
 	)
