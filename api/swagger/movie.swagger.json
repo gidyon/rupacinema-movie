@@ -60,10 +60,22 @@
             "type": "string"
           },
           {
-            "name": "admin_id",
+            "name": "admin_creds.username",
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "admin_creds.level",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "READER",
+              "READER_AND_ONLY_FOOD",
+              "SUPER_ADMIN"
+            ],
+            "default": "READER"
           }
         ],
         "tags": [
@@ -179,6 +191,28 @@
     }
   },
   "definitions": {
+    "accountAdminLevel": {
+      "type": "string",
+      "enum": [
+        "READER",
+        "READER_AND_ONLY_FOOD",
+        "SUPER_ADMIN"
+      ],
+      "default": "READER",
+      "title": "AdminLevel is the administrative level of an admin"
+    },
+    "accountAuthenticateAdminRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/definitions/accountAdminLevel"
+        }
+      },
+      "title": "Request to authenticate admin"
+    },
     "movieAudience": {
       "type": "string",
       "enum": [
@@ -197,6 +231,9 @@
       "properties": {
         "request_id": {
           "type": "string"
+        },
+        "admin_creds": {
+          "$ref": "#/definitions/accountAuthenticateAdminRequest"
         },
         "movie": {
           "$ref": "#/definitions/movieMovie"
@@ -282,6 +319,9 @@
       "properties": {
         "request_id": {
           "type": "string"
+        },
+        "admin_creds": {
+          "$ref": "#/definitions/accountAuthenticateAdminRequest"
         },
         "movie": {
           "$ref": "#/definitions/movieMovie"
