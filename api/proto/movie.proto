@@ -7,6 +7,7 @@ package rupacinema.movie;
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
+import "account/api/proto/account.proto";
 
 
 // Movie resource represents a video content played at the cinema's
@@ -48,19 +49,21 @@ enum Audience {
 // Request to create a movie resource
 message CreateMovieRequest {
     string request_id = 1;
-    Movie movie = 2;
+    rupacinema.account.AuthenticateAdminRequest admin_creds = 2;
+    Movie movie = 3;
 }
 
 // Request to update a movie resource. Performs a full update
 message UpdateMovieRequest {
     string request_id = 1;
+    rupacinema.account.AuthenticateAdminRequest admin_creds = 2;
     Movie movie = 3;
 }
 
 // Request to remove a movie resource
 message DeleteMovieRequest {
     string movie_id = 1;
-    string admin_id = 2;
+    rupacinema.account.AuthenticateAdminRequest admin_creds = 2;
 }
 
 // Request to retrieve a collection of movies
@@ -95,6 +98,7 @@ service MovieAPI {
     rpc CreateMovie (CreateMovieRequest) returns (google.protobuf.Empty) {
         // CreateMovie maps to HTTP POST method
         // request_id and movie resource are contained in the request body
+        // admin [username and level] are contained in the request body
         option (google.api.http) = {
             post: "/api/movies"
             body: "*"
@@ -106,6 +110,7 @@ service MovieAPI {
         // UpdateMovie maps to HTTP PUT method
         // Performs a full update of the movie resource
         // request_id and movie resource are contained in the request body
+        // admin [username and level] are contained in the request body
         option (google.api.http) = {
             put: "/api/movies"
             body: "*"
@@ -115,7 +120,7 @@ service MovieAPI {
     // Removes permanently a movie resource. Admins only. Requires authentication.
     rpc DeleteMovie (DeleteMovieRequest) returns (google.protobuf.Empty) {
         // DeleteMovie maps to HTTP DELETE method
-        // movie_id and admin_id are contained in the request URL query parameters
+        // movie_id, admin [username and level] are contained in the request URL query parameters
         option (google.api.http) = {
             delete: "/api/movies"
         };
