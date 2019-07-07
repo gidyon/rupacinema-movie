@@ -1,0 +1,28 @@
+{
+    "requestId": "",
+    "adminCreds": {
+    	"username": "rupa",
+    	"level": 2
+    },
+    "movie": {
+        "title": "Hotel Mumbai",
+        "price": "KSh. 800",
+        "description": "Error strikes in the heart of Mumbai, India, as members of Lashkar-e-Taiba storm the Taj Mahal Palace Hotel in a series of coordinated attacks throughout the city. Amid the gunfire and mayhem, a brave chef and kitchen worker decide to risk their own lives to try and protect the frightened guests",
+        "trailerUrl": "https://youtube.com",
+        "releaseDate": "2019-05-10",
+        "ratings": 9.3,
+        "movieDurationMins": 172,
+        "photos": [
+            "https://1loy.com/folders/images/2019/6/16511/16511_poster.jpg"
+        ],
+        "category": [
+            "Crime",
+            "Action",
+            "Society",
+            "War"
+        ],
+        "audienceLabel": "PARENTAL_GUIDANCE_13",
+        "allVotes": 0,
+        "currentVotes": 0
+    }
+}

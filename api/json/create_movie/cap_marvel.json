@@ -1,0 +1,28 @@
+{
+    "requestId": "",
+    "adminCreds": {
+    	"username": "rupa",
+    	"level": 2
+    },
+    "movie": {
+        "title": "Captain Marvel",
+        "price": "KSh. 800",
+        "description": "Captain Marvel is an extraterrestrial Kree warrior who finds herself caught in the middle of an intergalactic battle between her people and the Skrulls. Living on Earth in 1995, she keeps having recurring memories of another life as U.S. Air Force pilot Carol Danvers. With help from Nick Fury, Captain Marvel tries to uncover the secrets of her past while harnessing her special superpowers to end the war with the evil Skrulls.",
+        "trailerUrl": "https://youtube.com",
+        "releaseDate": "2019-05-12",
+        "ratings": 8.9,
+        "movieDurationMins": 137,
+        "photos": [
+            "https://cdn-images-1.medium.com/max/2600/1*_y5c_029oeM0K2dHURt3Zg@2x.jpeg"
+        ],
+        "category": [
+            "Sci-fi",
+            "Action",
+            "Marvel",
+            "War"
+        ],
+        "audienceLabel": "PARENTAL_GUIDANCE",
+        "allVotes": 0,
+        "currentVotes": 0
+    }
+}

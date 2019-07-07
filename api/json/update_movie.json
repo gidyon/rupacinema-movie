@@ -1,0 +1,28 @@
+{
+    "requestId": "",
+    "adminCreds": {
+    	"username": "rupa",
+    	"level": 2
+    },
+    "movie": {
+    	"id": "30d6bc66-d25c-4a6f-a2c7-10298ec80d64",
+        "title": "Shazam",
+        "price": "KSh. 800",
+        "description": "We all have a superhero inside of us -- it just takes a bit of magic to bring it out. In 14-year-old Billy Batson's case, all he needs to do is shout out one word to transform into the adult superhero Shazam. Still a kid at heart, Shazam revels in the new version of himself by doing what any other teen would do -- have fun while testing out his newfound powers. But he'll need to master them quickly before the evil Dr. Thaddeus Sivana can get his hands on Shazam's magical abilities.",
+        "trailerUrl": "https://www.youtube.com/embed/uilJZZ_iVwY",
+        "releaseDate": "2019-05-23",
+        "ratings": 9.1,
+        "movieDurationMins": 143,
+        "photos": [
+            "https://celthric.com/wp-content/uploads/2019/03/ShazamMP.jpg"
+        ],
+        "category": [
+            "Sci-fi",
+            "Action",
+            "Marvel"
+        ],
+        "audienceLabel": "GENERAL_AUDIENCE",
+        "allVotes": 0,
+        "currentVotes": 0
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "requestId": "",
+    "adminCreds": {
+    	"username": "rupa",
+    	"level": 2
+    },
+    "movie": {
+        "title": "Avengers Endgame",
+        "price": "KSh. 800",
+        "description": "Adrift in space with no food or water, Tony Stark sends a message to Pepper Potts as his oxygen supply starts to dwindle. Meanwhile, the remaining Avengers -- Thor, Black Widow, Captain America and Bruce Banner -- must figure out a way to bring back their vanquished allies for an epic showdown with Thanos -- the evil demigod who decimated the planet and the universe.",
+        "trailerUrl": "https://youtube.com",
+        "releaseDate": "2019-04-19",
+        "ratings": 9.5,
+        "movieDurationMins": 181,
+        "photos": [
+            "https://cdn.images.express.co.uk/img/dynamic/36/590x/Avengers-Endgame-cameo-1119491.jpg?r=1556299677416"
+        ],
+        "category": [
+            "Sci-fi",
+            "Action",
+            "Marvel",
+            "War"
+        ],
+        "audienceLabel": "PARENTAL_GUIDANCE_13",
+        "allVotes": 0,
+        "currentVotes": 0
+    }
+}

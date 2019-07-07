@@ -1,0 +1,28 @@
+{
+    "requestId": "",
+    "adminCreds": {
+    	"username": "rupa",
+    	"level": 2
+    },
+    "movie": {
+        "title": "Godzilla: King of the Monsters",
+        "price": "KSh. 800",
+        "description": "Members of the crypto-zoological agency Monarch face off against a battery of god-sized monsters, including the mighty Godzilla, who collides with Mothra, Rodan, and his ultimate nemesis, the three-headed King Ghidorah. When these ancient super-species-thought to be mere myths-rise again, they all vie for supremacy, leaving humanity's very existence hanging in the balance.",
+        "trailerUrl": "https://youtube.com",
+        "releaseDate": "2019-06-10",
+        "ratings": 9.3,
+        "movieDurationMins": 153,
+        "photos": [
+            "https://mir-s3-cdn-cf.behance.net/project_modules/1400/76b93774022631.5c1db81653e53.jpg"
+        ],
+        "category": [
+            "Sci-fi",
+            "Action",
+            "Marvel",
+            "War"
+        ],
+        "audienceLabel": "PARENTAL_GUIDANCE",
+        "allVotes": 0,
+        "currentVotes": 0
+    }
+}
