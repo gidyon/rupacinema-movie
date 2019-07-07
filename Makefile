@@ -19,13 +19,13 @@ gen_certs: ## Generate server certs for encryption
 		-nodes -subj '/CN=localhost'
 		
 gen_stub: ## Generate client stub in Go language
-	@protoc -I=$(API_IN_PATH) -I=third_party --go_out=plugins=grpc:$(API_OUT_PATH) movie.proto
+	@protoc -I=$(API_IN_PATH) -I=third_party -I=../ --go_out=plugins=grpc:$(API_OUT_PATH) movie.proto
 
 gen_rest: ## Generate reverse proxy server to for REST APIs to gRPC server
-	@protoc -I=$(API_IN_PATH) -I=third_party --grpc-gateway_out=logtostderr=true:$(API_OUT_PATH) movie.proto
+	@protoc -I=$(API_IN_PATH) -I=third_party -I=../ --grpc-gateway_out=logtostderr=true:$(API_OUT_PATH) movie.proto
 
 gen_swagger_doc: ## Generate swagger documenation
-	@protoc -I=$(API_IN_PATH) -I=third_party --swagger_out=logtostderr=true:$(SWAGGER_DOC_OUT_PATH) movie.proto
+	@protoc -I=$(API_IN_PATH) -I=third_party -I=../ --swagger_out=logtostderr=true:$(SWAGGER_DOC_OUT_PATH) movie.proto
 
 gen_api_all: gen_stub gen_rest gen_swagger_doc ## Auto-generate grpc go sources
 	
