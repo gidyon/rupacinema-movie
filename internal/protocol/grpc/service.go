@@ -38,7 +38,7 @@ func createMovieAPIServer(
 	}
 
 	// Account service
-	accountServiceConn, err := dialNotificationService(ctx, cfg)
+	accountServiceConn, err := dialAccountService(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to account service: %v", err)
 	}
@@ -97,7 +97,7 @@ func dialNotificationService(
 	ctx context.Context, cfg *config.Config,
 ) (*grpc.ClientConn, error) {
 
-	creds, err := credentials.NewClientTLSFromFile(cfg.NotificationServiceCertPath, "notification")
+	creds, err := credentials.NewClientTLSFromFile(cfg.NotificationServiceCertPath, "localhost")
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func dialAccountService(
 	ctx context.Context, cfg *config.Config,
 ) (*grpc.ClientConn, error) {
 
-	creds, err := credentials.NewClientTLSFromFile(cfg.AccountServiceCertPath, "account")
+	creds, err := credentials.NewClientTLSFromFile(cfg.AccountServiceCertPath, "localhost")
 	if err != nil {
 		return nil, err
 	}
